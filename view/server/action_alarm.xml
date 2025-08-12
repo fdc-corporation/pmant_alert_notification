@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="ir_cron_tarea_mantenimiento_alarmas" model="ir.cron">
+        <field name="name">Recordatorios de Tareas de Mantenimiento</field>
+        <field name="model_id" ref="pmant.model_tarea_mantenimiento"/>
+        <field name="state">code</field>
+        <field name="code">model._check_and_send_alarms()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">minutes</field>
+        <field name="numbercall">-1</field> <!-- Número de veces que se debe ejecutar (-1 para ejecución infinita) -->
+        <field name="active">True</field>
+    </record>
+
+    <record id="ir_cron_crm_fecha_planeada" model="ir.cron">
+        <field name="name">Recordatorios de CRM</field>
+        <field name="model_id" ref="model_crm_lead"/>
+        <field name="state">code</field>
+        <field name="code">model._check_and_send_alarms()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">minutes</field>
+        <field name="numbercall">-1</field> <!-- Número de veces que se debe ejecutar (-1 para ejecución infinita) -->
+        <field name="active">True</field>
+    </record>
+</odoo>
