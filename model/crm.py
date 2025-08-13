@@ -32,7 +32,7 @@ class leadMantenimiento(models.Model):
             vals["fecha_planeada"] = False
             new_id = vals.get("stage_id") or False
             if new_id:
-                new_stage = self.env["etapa.lead.mantenimiento"].browse(new_id)
+                new_stage = self.env["crm.stage"].browse(new_id)
                 vals["recordatorios_ids"] = [(6, 0, new_stage.recordatorios_ids.ids)]
             else:
                 # sin etapa -> sin recordatorios
