@@ -25,7 +25,6 @@
         "view/from_mant_inherit.xml",
         "view/from_etapa_mant_inherit.xml",
         "view/form_crm_inherit.xml",
-        "view/form_sale_inherit.xml",
         # "view/from_account_inherit.xml",
         #PLANTILLAS DE EMAIL 
         "view/email/email_notification.xml",
