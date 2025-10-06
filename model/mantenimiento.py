@@ -28,6 +28,7 @@ class TareaMantenimiento(models.Model):
     def write(self, vals):
         # si cambia de etapa, opcionalmente limpia fecha y repone recordatorios
         if "stage_id" in vals:
+            print("EJECUTANDO EL WIRTE CON LÑA CONDICIONAL")
             vals = vals.copy()
             vals["fecha_planeada"] = False
             new_id = vals.get("stage_id") or False
@@ -39,9 +40,10 @@ class TareaMantenimiento(models.Model):
                 vals["recordatorios_ids"] = [(5, 0, 0)]
         return super().write(vals)
 
+    # ============== VERIFICACIÓN DE ALARMAS ==================
     def _check_and_send_alarms(self):
         # 1) AHORA en Lima (truncado a minuto)
-        now_utc = fields.Datetime.now().replace(second=0, microsecond=0)  # naive UTC (Odoo)
+        now_utc = fields.Datetime.now().replace(second=0, microsecond=0)
         now_lima = (
             pytz.UTC.localize(now_utc)
             .astimezone(LIMA_TZ)
@@ -53,7 +55,7 @@ class TareaMantenimiento(models.Model):
 
         # 2) Recorre tareas con fecha_planeada
         for tarea in self.search([("fecha_planeada", "!=", False)]):
-            # convertir fecha_planeada (naive UTC) -> Lima y truncar a minuto
+            # convertir fecha_planeada UTC -> Lima
             fp_utc = tarea.fecha_planeada.replace(second=0, microsecond=0)
             fp_lima = (
                 pytz.UTC.localize(fp_utc)
@@ -64,44 +66,43 @@ class TareaMantenimiento(models.Model):
             for alarm in tarea.recordatorios_ids:
                 mins_before = (alarm.duration or 0) * mult.get(alarm.interval, 1)
 
-                # 3) Trigger en LIMA: fecha_planeada (Lima) - minutos del recordatorio
+                # 3) Calcular trigger en Lima
                 trigger_lima = (fp_lima - timedelta(minutes=mins_before)).replace(second=0, microsecond=0)
 
-                # 4) Evitar duplicados (clave en hora LIMA al minuto)
+                # 4) Evitar duplicados con clave única
                 key = f"{tarea.id}:{alarm.id}:{trigger_lima.strftime('%Y-%m-%d %H:%M')}-LIMA"
                 if tarea.last_reminder_key == key:
                     continue
 
                 _logger.info(
-                    "🕒 Tarea %s | alarm=%s %s min | FP Lima=%s | Trigger Lima=%s | Now Lima=%s",
+                    "🕒 Tarea %s | alarm=%s %s min | FP=%s | Trigger=%s | Now=%s",
                     tarea.id, alarm.alarm_type, mins_before,
                     fp_lima.strftime("%Y-%m-%d %H:%M"),
                     trigger_lima.strftime("%Y-%m-%d %H:%M"),
                     now_lima.strftime("%Y-%m-%d %H:%M"),
                 )
 
-                # 5) Comparación EXACTA en LIMA (fecha+hora+minuto)
-                if now_lima == trigger_lima:
+                # 5) Comparación con tolerancia de ±1 minuto
+                diff = abs((now_lima - trigger_lima).total_seconds())
+                if diff <= 60:
                     title = "Recordatorio de Mantenimiento"
-                    msg = f"La tarea “{tarea.name}” tiene una fecha de seguimiento que esta por vencer {fp_lima.strftime('%Y-%m-%d %H:%M')}."
-                    _logger.info("⚠️ EJECUCION DE TIPO" +  str(alarm.alarm_type))
+                    msg = f"La tarea “{tarea.name}” tiene una fecha de seguimiento que está por vencer: {fp_lima.strftime('%Y-%m-%d %H:%M')}."
 
                     if alarm.alarm_type == "notification":
                         users = self._get_users_to_notify(tarea)
-                        _logger.info("⚠️ EJECUCION DE CONTACTO NOTIFICACION" +  str(users))
-
                         self._queue_popup(users, title, msg, notif_type="info", sticky=True)
 
                     elif alarm.alarm_type == "email":
                         self._send_email_notification_for(tarea, alarm)
 
                     tarea.write({"last_reminder_key": key})
-                # else: no es el minuto exacto → no dispara
 
+    # ============== USUARIOS A NOTIFICAR ==================
     def _get_users_to_notify(self, tarea):
-        """Devuelve un ÚNICO usuario: el planner con el permiso group_pmant_planner_tarea."""
-        xmlid = 'pmant.group_pmant_planner_tarea'  # ← cambia 'pmant' por el nombre de tu módulo
+        """Devuelve todos los usuarios activos con el grupo planner."""
+        xmlid = 'pmant.group_pmant_planner'
         group = self.env.ref(xmlid, raise_if_not_found=False)
+
         if not group:
             group = self.env['res.groups'].sudo().search([
                 ('name', '=', 'Mantenimiento - Autoasignacion tareas (planner)')
@@ -111,14 +112,14 @@ class TareaMantenimiento(models.Model):
             _logger.info("⚠️ No existe el grupo planner '%s'. Usando admin como fallback.", xmlid)
             return self.env.ref('base.user_admin')
 
-        users = group.users.filtered(lambda u: u.active)
+        users = group.user_ids.filtered(lambda u: u.active)
         if not users:
             _logger.info("⚠️ El grupo planner '%s' no tiene usuarios activos. Usando admin.", xmlid)
             return self.env.ref('base.user_admin')
 
-        # Si hubiera más de uno, toma uno determinístico (menor id)
-        return users.sorted('id')[:1]
+        return users  # ahora devuelve todos
 
+    # ============== ENVÍO DE EMAIL ==================
     def _send_email_notification_for(self, tarea, alarm):
         template = self.env.ref(
             "pmant_alert_notification.template_notification_maintenance_email",
@@ -127,6 +128,7 @@ class TareaMantenimiento(models.Model):
         if template:
             template.send_mail(tarea.id, force_send=True)
 
+    # ============== POPUP NOTIFICATION ==================
     def _queue_popup(self, users, title, message, notif_type="info", sticky=True, when=None):
         when = when or fields.Datetime.now()
         vals = [{
@@ -140,7 +142,7 @@ class TareaMantenimiento(models.Model):
         if vals:
             self.env['pmant.notification'].sudo().create(vals)
 
-    # ===== Defaults =====
+    # ============== DEFAULTS ==================
     def _default_recordatorios(self):
         return self.stage_id.recordatorios_ids if self.stage_id else self.env["calendar.alarm"].search([], limit=1)
 

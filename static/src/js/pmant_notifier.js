@@ -1,10 +1,11 @@
 /** @odoo-module **/
 import { registry } from "@web/core/registry";
+import { rpc } from "@web/core/network/rpc";
 
 const service = {
+    dependencies: ["notification"],   // 👈 obligatorio para que esté en env.services
     start(env) {
-        const rpc = env.services.rpc;
-        const notify = env.services.notification;
+        const notification = env.services.notification;  
         const seen = new Set();
 
         async function poll() {
@@ -15,11 +16,13 @@ const service = {
                     for (const n of res) {
                         if (seen.has(n.id)) continue;
                         seen.add(n.id);
-                        notify.add(n.message, {
+
+                        notification.add(n.message, {
                             title: n.title || "Notificación",
                             type: n.type || "info",
                             sticky: !!n.sticky,
                         });
+
                         ids.push(n.id);
                     }
                     if (ids.length) {
@@ -27,9 +30,9 @@ const service = {
                     }
                 }
             } catch (e) {
-                // silenciar errores de red
+                console.warn("🕵️‍♂️ pmant_notifier: error while polling", e);
             } finally {
-                setTimeout(poll, 60 * 1000); // cada 60s
+                setTimeout(poll, 60 * 1000);
             }
         }
         poll();

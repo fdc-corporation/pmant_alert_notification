@@ -7,7 +7,6 @@
         <field name="code">model._check_and_send_alarms()</field>
         <field name="interval_number">1</field>
         <field name="interval_type">minutes</field>
-        <field name="numbercall">-1</field> <!-- Número de veces que se debe ejecutar (-1 para ejecución infinita) -->
         <field name="active">True</field>
     </record>
 
@@ -18,7 +17,6 @@
         <field name="code">model._check_and_send_alarms()</field>
         <field name="interval_number">1</field>
         <field name="interval_type">minutes</field>
-        <field name="numbercall">-1</field> <!-- Número de veces que se debe ejecutar (-1 para ejecución infinita) -->
         <field name="active">True</field>
     </record>
 </odoo>
