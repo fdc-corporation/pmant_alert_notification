@@ -11,6 +11,6 @@ class AccountMove(models.Model):
         # Luego validamos con UserError
         for record in self:
             if record.estado_sunat not in ["01", "05"]:
-                raise UserError(_(f"La factura {record.name} no fue aceptada por la SUNAT / {record.p_response}"))
+                raise UserError(_(f"La factura {record.name} no fue aceptada por la SUNAT"))
 
         return res
