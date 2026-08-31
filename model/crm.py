@@ -8,10 +8,8 @@ LIMA_TZ = pytz.timezone("America/Lima")
 
 
 class leadMantenimiento(models.Model):
-    _inherit = "crm.lead"
     _description = "CRM LEAD"
-    _name = "crm.lead"  # opcional si solo es herencia
-    _inherit = ["crm.lead", "mail.thread", "mail.activity.mixin"]
+    _inherit = "crm.lead"
 
 
     fecha_planeada = fields.Datetime(string="Fecha Llamada", tracking=True, index=True)
@@ -138,5 +136,3 @@ class leadMantenimiento(models.Model):
 class Etapalead(models.Model):
     _inherit = "crm.stage"
     recordatorios_ids = fields.Many2many("calendar.alarm", string="Recordatorios")
-
-

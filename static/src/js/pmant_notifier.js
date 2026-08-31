@@ -1,4 +1,4 @@
-/** @odoo-module **/
+41/** @odoo-module **/
 import { registry } from "@web/core/registry";
 import { rpc } from "@web/core/network/rpc";
 

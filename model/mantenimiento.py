@@ -8,10 +8,8 @@ LIMA_TZ = pytz.timezone("America/Lima")
 
 
 class TareaMantenimiento(models.Model):
-    _inherit = "tarea.mantenimiento"
     _description = "Tarea de Mantenimiento"
-    _name = "tarea.mantenimiento"  # opcional si solo es herencia
-    _inherit = ["tarea.mantenimiento", "mail.thread", "mail.activity.mixin"]
+    _inherit = "tarea.mantenimiento"
 
 
     fecha_planeada = fields.Datetime(string="Fecha Planeada", tracking=True, index=True)
@@ -28,7 +26,6 @@ class TareaMantenimiento(models.Model):
     def write(self, vals):
         # si cambia de etapa, opcionalmente limpia fecha y repone recordatorios
         if "stage_id" in vals:
-            print("EJECUTANDO EL WIRTE CON LÑA CONDICIONAL")
             vals = vals.copy()
             vals["fecha_planeada"] = False
             new_id = vals.get("stage_id") or False
