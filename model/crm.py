@@ -121,7 +121,7 @@ class leadMantenimiento(models.Model):
             'user_id': u.id,
             'title': title,
             'message': message,
-            'type': notif_type,
+            'notification_type': notif_type,
             'sticky': sticky,
             'scheduled_at': when,
         } for u in users if u and u.active]

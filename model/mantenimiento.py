@@ -132,7 +132,7 @@ class TareaMantenimiento(models.Model):
             'user_id': u.id,
             'title': title,
             'message': message,
-            'type': notif_type,
+            'notification_type': notif_type,
             'sticky': sticky,
             'scheduled_at': when,
         } for u in users if u and u.active]
@@ -147,26 +147,6 @@ class TareaMantenimiento(models.Model):
 class EtapaTarea(models.Model):
     _inherit = "etapa.tarea.mantenimiento"
     recordatorios_ids = fields.Many2many("calendar.alarm", string="Recordatorios")
-
-
-
-class PmantNotification(models.Model):
-    _name = "pmant.notification"
-    _description = "Notificaciones para mostrar en WebClient"
-    _order = "id desc"
-
-    user_id = fields.Many2one("res.users", required=True, index=True)
-    title = fields.Char(required=True)
-    message = fields.Text(required=True)
-    type = fields.Selection(
-        [("info","Info"),("success","Success"),("warning","Warning"),("danger","Danger")],
-        default="info"
-    )
-    sticky = fields.Boolean(default=False)
-    scheduled_at = fields.Datetime(default=fields.Datetime.now, index=True)
-    is_sent = fields.Boolean(default=False, index=True)
-    sent_at = fields.Datetime()
-
 
 
 

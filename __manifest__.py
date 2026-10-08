@@ -1,6 +1,6 @@
 {
     'name': 'Alertas por fechas CRM y Mantenimiento',
-    'version': '19.0.2.0.0',
+    'version': '19.0.2.1.0',
     'description': 'Módulo para gestionar alertas por fechas en CRM y Mantenimiento',
     'author': 'Yostin Palacios',
     'website': 'https://equiposindustriales.pe/',  # Cambia a tu sitio web si aplica
@@ -17,7 +17,6 @@
         "account",
     ],
     'data': [
-        "security/ir.model.access.csv",
         # ACCIONES DE SERVIDOR
         "view/server/action_alarm.xml",
         # PLANTILLAS DE MODELOS
@@ -29,11 +28,6 @@
         "view/email/email_notification.xml",
         "view/email/email_notification_crm.xml",
     ],
-    'assets': {
-        "web.assets_backend": [
-            "pmant_alert_notification/static/src/js/pmant_notifier.js",
-        ]
-    },
     'installable': True,
     'application': False,
     'auto_install': False,
