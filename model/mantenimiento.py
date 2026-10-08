@@ -166,3 +166,7 @@ class PmantNotification(models.Model):
     scheduled_at = fields.Datetime(default=fields.Datetime.now, index=True)
     is_sent = fields.Boolean(default=False, index=True)
     sent_at = fields.Datetime()
+
+
+
+
